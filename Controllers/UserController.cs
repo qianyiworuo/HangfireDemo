@@ -49,6 +49,7 @@ namespace HangfireDemo.Controllers
         }
 
         // Hangfire调用的方法必须是public
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task CleanupInactiveUsers()
         {
             // 实际清理逻辑
