@@ -1,4 +1,5 @@
 ﻿using SqlSugar;
+using System;
 
 namespace HangfireDemo.Models
 {

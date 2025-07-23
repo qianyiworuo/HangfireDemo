@@ -30,12 +30,28 @@ namespace HangfireDemo.Controllers
                 _userService.CreateUserAsync(request.Name, request.Email));
 
             // 延迟执行：发送欢迎邮件（5分钟后）
+            // 使用ContinueJobWith来获取前一个任务的返回值
+        //    _backgroundJob.ContinueJobWith(
+        //         jobId, 
+        //         () => _userService.SendWelcomeEmailAsync(
+        //             _userService.GetUserAsync(request.Email).Result.Id),
+        //         JobContinuationOptions.OnAnyFinishedState);
+            // 如果需要延迟5分钟，应该使用Schedule方法
+            // 或者可以这样实现延迟：
             _backgroundJob.Schedule(
-                () => _userService.SendWelcomeEmailAsync(1), // 实际应用中应传递用户ID
-                TimeSpan.FromMinutes(5));
+               () => _userService.SendWelcomeEmailAsync(
+                   _userService.GetUserAsync(request.Email).Result.Id),
+               TimeSpan.FromMinutes(5));
 
             return Ok(new { JobId = jobId });
         }
+        [HttpGet("/{sEmail}")]
+        public IActionResult GetUsers(string sEmail)
+        {
+            var user = _userService.GetUserAsync(sEmail);
+            return Ok(new { user.Result.Name, user.Result.Email });
+        }
+
 
         [HttpPost("start-cleanup")]
         public IActionResult StartCleanupJob()

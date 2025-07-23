@@ -9,7 +9,7 @@ using SqlSugar;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Ìí¼ÓSqlSugar·þÎñ
+// ï¿½ï¿½ï¿½ï¿½SqlSugarï¿½ï¿½ï¿½ï¿½
 builder.Services.AddScoped<ISqlSugarClient>(provider =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -24,6 +24,7 @@ builder.Services.AddScoped<ISqlSugarClient>(provider =>
 
 var hangfireConnection = builder.Configuration.GetConnectionString("HangfireConnection");
 builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UseStorage(
@@ -31,11 +32,11 @@ builder.Services.AddHangfire(config => config
             hangfireConnection,
             new MySqlStorageOptions
             {
-                TablesPrefix = "hf_", // ±íÇ°×º
+                TablesPrefix = "hf_", // ï¿½ï¿½Ç°×º
                 QueuePollInterval = TimeSpan.FromSeconds(15),
                 JobExpirationCheckInterval = TimeSpan.FromHours(1),
                 CountersAggregateInterval = TimeSpan.FromMinutes(5),
-                PrepareSchemaIfNecessary = true, // ×Ô¶¯´´½¨±í
+                PrepareSchemaIfNecessary = true, // ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 TransactionTimeout = TimeSpan.FromMinutes(1)
             })));
 
@@ -48,10 +49,10 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// ³õÊ¼»¯Êý¾Ý¿â
+// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½
 InitializeDatabase(app.Services);
 
-// ÅäÖÃÖÐ¼ä¼þ
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -74,6 +75,6 @@ void InitializeDatabase(IServiceProvider serviceProvider)
     using var scope = serviceProvider.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ISqlSugarClient>();
 
-    // ´´½¨Ê¾Àý±í
+    // ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
     db.CodeFirst.InitTables<User>();
 }
