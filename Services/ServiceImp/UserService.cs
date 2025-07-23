@@ -20,9 +20,9 @@ namespace HangfireDemo.Services.ServiceImp
         public async Task<int> CreateUserAsync(string name, string email)
         {
             var user = new User { Name = name, Email = email};
-            await _db.Insertable(user).ExecuteCommandAsync();
+            var userId = await _db.Insertable(user).ExecuteReturnIdentityAsync();
             _logger.LogInformation("User created: {Name} ({Id})", name, user.Id);
-            return user.Id;
+            return userId;
         }
 
         public async Task<User> GetUserAsync(string email)

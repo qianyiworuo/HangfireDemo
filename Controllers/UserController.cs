@@ -23,35 +23,40 @@ namespace HangfireDemo.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] CreateUserRequest request)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
         {
             // 立即执行：创建用户
-            var jobId = _backgroundJob.Enqueue(() =>
-                _userService.CreateUserAsync(request.Name, request.Email));
+            //var jobId = _backgroundJob.Enqueue(() =>
+            //     _userService.CreateUserAsync(request.Name, request.Email));
+            var userId = await _userService.CreateUserAsync(request.Name, request.Email);
+            var jobId = "";
+            if (userId > 0)
+            {
+                // 如果需要延迟5分钟，应该使用Schedule方法
+                // 或者可以这样实现延迟：
+                jobId = _backgroundJob.Schedule(
+                   () => _userService.SendWelcomeEmailAsync(userId),
+                   TimeSpan.FromMinutes(5));
+            }
 
             // 延迟执行：发送欢迎邮件（5分钟后）
             // 使用ContinueJobWith来获取前一个任务的返回值
-        //    _backgroundJob.ContinueJobWith(
-        //         jobId, 
-        //         () => _userService.SendWelcomeEmailAsync(
-        //             _userService.GetUserAsync(request.Email).Result.Id),
-        //         JobContinuationOptions.OnAnyFinishedState);
-            // 如果需要延迟5分钟，应该使用Schedule方法
-            // 或者可以这样实现延迟：
-            _backgroundJob.Schedule(
-               () => _userService.SendWelcomeEmailAsync(
-                   _userService.GetUserAsync(request.Email).Result.Id),
-               TimeSpan.FromMinutes(5));
+            //    _backgroundJob.ContinueJobWith(
+            //         jobId, 
+            //         () => _userService.SendWelcomeEmailAsync(
+            //             _userService.GetUserAsync(request.Email).Result.Id),
+            //         JobContinuationOptions.OnAnyFinishedState);
+            
 
             return Ok(new { JobId = jobId });
         }
+
         [HttpGet("/{sEmail}")]
         public IActionResult GetUsers(string sEmail)
         {
             var user = _userService.GetUserAsync(sEmail);
             return Ok(new { user.Result.Name, user.Result.Email });
         }
-
 
         [HttpPost("start-cleanup")]
         public IActionResult StartCleanupJob()
